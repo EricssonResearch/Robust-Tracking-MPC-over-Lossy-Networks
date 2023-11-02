@@ -3,11 +3,13 @@
 This repository will contain code for the related ECC 2024 submission, currently under peer review.
 
 ## Abstract
-In this paper, we present a remote reference tracking approach for constrained systems, which handles both network imperfections as well as a disturbance acting on the local plant.
-Our approach consists of a remote model predictive controller, which acts on an estimate of the nominal plant state. 
-The optimal input trajectory is sent over an imperfect network to the local plant.
-In the local plant, the input trajectory is checked for consistency and then applied to a nominal process model. 
-The nominal process model together with an ancillary controller are used to determine the actual control input to the plant.
+This paper addresses the problem of controlling constrained systems subject to disturbances in the case where controller and system are connected over a lossy network.
+To do so, we propose a novel framework that splits the concept of tube-based model predictive control in two parts. 
+One runs locally on the system and is responsible for disturbance rejection, while the other runs remotely and provides optimal input trajectories that satisfy the system's state and input constraints.
+Key to our approach is the presence of a nominal model and an ancillary controller on the local system.
+Theoretical guarantees regarding the recursive feasibility and the tracking capabilities in the presence of disturbances and packet losses in both directions are provided.
+To test the efficacy of the proposed approach, we compare it to a state-of-the-art solution in the case of controlling a cartpole system. 
+Extensive simulations are carried with both linearized and nonlinear system dynamics, as well as different packet loss probabilities and disturbances.
 
 ## Authors
 David Umsonst [david.umsonst@ericsson.com](mailto:david.umsonst@ericsson.com) and Fernando S. Barbosa [fernando.dos.santos.barbosa@ericsson.com](mailto:fernando.dos.santos.barbosa@ericsson.com)
