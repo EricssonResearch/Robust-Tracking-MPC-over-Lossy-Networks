@@ -19,13 +19,13 @@ cd Robust-Tracking-MPC-over-Lossy-Networks
 ```
 Set up a virtual environment (this step is **optional**)
 ```bash
-python -m venv .LinMPCoverNet
+python3 -m venv .LinMPCoverNet
 source .LinMPCoverNet/bin/activate
 ```
 Next, run 
 ```bash
-pip install --upgrade pip
-pip install .
+pip3 install --upgrade pip
+pip3 install .
 ```
 to install the `LinearMPCOverNetworks` package.
 Finally, if one wants to reproduce the results in our submitted paper in [ECC Results](./ECC%20Results/), one needs to run 
