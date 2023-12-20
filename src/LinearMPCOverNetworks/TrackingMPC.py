@@ -87,7 +87,7 @@ class TrackingMPC(RegulatorMPC.RegulatorMPC):
         constraints=[self._x_mpc[:,0]==self._x_init_param]
         cost = 0
         for i in range(self._N):
-            cost += cp.quad_form(self._x_mpc[:,i+1]-self._x_bar,self._Q)+cp.quad_form(self._u_mpc[:,i]-self._u_bar,self._R)
+            cost += cp.quad_form(self._x_mpc[:,i]-self._x_bar,self._Q)+cp.quad_form(self._u_mpc[:,i]-self._u_bar,self._R)
             # dynamic constraint x(k+1)=Ax(k)+Bu(k)
             constraints += [self._x_mpc[:,i+1]==self._A @ self._x_mpc[:,i] + self._B @ self._u_mpc[:,i]]
             if self._X is not None:

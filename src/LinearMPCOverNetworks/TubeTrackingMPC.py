@@ -133,7 +133,7 @@ class TubeTrackingMPC(TubeRegulatorMPC):
         cost = 0
 
         for i in range(self._N):
-            cost += cp.quad_form(self._x_mpc[:,i+1]-self._x_bar,self._Q)+cp.quad_form(self._u_mpc[:,i]-self._u_bar,self._R)
+            cost += cp.quad_form(self._x_mpc[:,i]-self._x_bar,self._Q)+cp.quad_form(self._u_mpc[:,i]-self._u_bar,self._R)
             # dynamic constraint x(k+1)=Ax(k)+Bu(k)
             constraints += [self._x_mpc[:,i+1]==self._A @ self._x_mpc[:,i] + self._B @ self._u_mpc[:,i]] # dynamics constraint
             constraints += [Hx@self._x_mpc[:,i]<=hx] # state constraint x(k)\in X
@@ -280,7 +280,7 @@ class ExtendedTubeTrackingMPC(TubeTrackingMPC):
         cost = 0
 
         for i in range(self._N):
-            cost += cp.quad_form(self._x_mpc_packet_received[:,i+1]-self._x_bar_packet_received,self._Q)+cp.quad_form(self._u_mpc_packet_received[:,i]-self._u_bar_packet_received,self._R)
+            cost += cp.quad_form(self._x_mpc_packet_received[:,i]-self._x_bar_packet_received,self._Q)+cp.quad_form(self._u_mpc_packet_received[:,i]-self._u_bar_packet_received,self._R)
             constraints += [self._x_mpc_packet_received[:,i+1]==self._A @ self._x_mpc_packet_received[:,i] + self._B @ self._u_mpc_packet_received[:,i]] # dynamics constraint
             constraints += [Hx@self._x_mpc_packet_received[:,i]<=hx] # state constraint
             constraints += [Hu@self._u_mpc_packet_received[:,i]<=hu] # output constraint
