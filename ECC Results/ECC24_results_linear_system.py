@@ -326,7 +326,7 @@ print(is_track_infeasible)
 # Plot results
 # define legends
 legend_in = []
-legend_label = ["Remote Tube MPC", "Remote MPC"]
+legend_label = ["RT-MPC", "R-MPC"]
 
 # Filter the tracking errors of the remote MPC to remove the results of the simulations, which resulted in infeasible problems
 tracking_error_track_filtered = []
@@ -365,8 +365,8 @@ traj_length_track = x_traj_track_sample.shape[1]
 _, (ax1,ax2) = plt.subplots(nrows=2)
 time_tube = [Th*i for i in range(T+1)]
 time_track = [Th*i for i in range(traj_length_track)]
-ax1.plot(time_tube,x_traj_tube_sample[0,:],'-.', color = 'C0', label='Remote Tube MPC', linewidth=2)
-ax1.plot(time_track,x_traj_track_sample[0,:],'--', color = 'C0', label='Remote MPC', linewidth=2)
+ax1.plot(time_tube,x_traj_tube_sample[0,:],'-.', color = 'C0', label=legend_label[0], linewidth=2)
+ax1.plot(time_track,x_traj_track_sample[0,:],'--', color = 'C0', label=legend_label[1], linewidth=2)
 if traj_length_track<T+1:
     ax1.plot(time_track[-1],x_traj_track_sample[0,traj_length_track-1], '*')
 # Plot reference

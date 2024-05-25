@@ -408,7 +408,7 @@ print(f"Mean: {np.mean(comp_times_scaled)}")
 fig, ax = plt.subplots()
 # define bins for the histogram
 bins = np.linspace(2.5,20,50)
-ax.hist(np.clip(comp_times_scaled, bins[0], bins[-1]), bins=bins, alpha = 0.7)
+ax.hist(np.clip(comp_times_scaled, bins[0], bins[-1]), bins=bins, alpha = 0.7, label  = 'RT-MPC')
 ax.set_xlabel('Execution time [ms]', fontsize='large')
 ax.set_ylabel('Count', fontsize='large')
 
@@ -424,9 +424,10 @@ print(f"90% Quantile: {np.quantile(comp_times_scaled,0.9)}")
 print(f"75% Quantile: {np.quantile(comp_times_scaled,0.75)}")
 print(f"Median: {np.median(comp_times_scaled)}")
 print(f"Mean: {np.mean(comp_times_scaled)}")
-ax.hist(np.clip(comp_times_scaled, bins[0], bins[-1]), bins=bins, alpha = 0.7, color='C2')
+ax.hist(np.clip(comp_times_scaled, bins[0], bins[-1]), bins=bins, alpha = 0.7, color='C2', label = 'ERT-MPC')
 ax.set_xlabel('Execution time [ms]', fontsize='large')
 ax.set_ylabel('Count', fontsize='large')
+ax.legend()
 
 # Print number of failed executions for each packet loss probability
 print("Failed executions for tracking MPC:")
@@ -446,7 +447,7 @@ for i in range(len(is_track_infeasible)):
 
 # define legends
 legend_in = []
-legend_label = ["Remote Tube MPC", "Extended Remote Tube MPC", "Remote MPC"]
+legend_label = ["RT-MPC", "ERT-MPC", "R-MPC"]
 
 fig3, ax3 = plt.subplots()
 
@@ -483,9 +484,9 @@ traj_length_track = x_traj_track_sample.shape[1]
 _, (ax1,ax2) = plt.subplots(nrows=2)
 time_tube = [Th*i for i in range(T+1)]
 time_track = [Th*i for i in range(traj_length_track)]
-ax1.plot(time_tube,x_traj_tube_sample[0,:],'-.', color = 'C0', label='Remote Tube MPC', linewidth=2)
-ax1.plot(time_tube,x_traj_Exttube_sample[0,:],'-.', color = 'C2', label='Extended Remote Tube MPC', linewidth=2)
-ax1.plot(time_track,x_traj_track_sample[0,:],'--', color = 'C1', label='Remote MPC', linewidth=2)
+ax1.plot(time_tube,x_traj_tube_sample[0,:],'-.', color = 'C0', label=legend_label[0], linewidth=2)
+ax1.plot(time_tube,x_traj_Exttube_sample[0,:],'-.', color = 'C2', label=legend_label[1], linewidth=2)
+ax1.plot(time_track,x_traj_track_sample[0,:],'--', color = 'C1', label=legend_label[2], linewidth=2)
 if traj_length_track<T+1:
     ax1.plot(time_track[-1],x_traj_track_sample[0,traj_length_track-1], '*', color = 'C1')
 ax1.plot(time_tube[0:-1],ref.T, color = 'k', label='r(k)')

@@ -643,7 +643,7 @@ for i in range(len(is_track_infeasible)):
 
 # Plot results for the tracking error as a box plot
 legend_in = []
-legend_label = ["Remote Tube MPC", "Extended Remote Tube MPC", "Remote MPC"]
+legend_label = ["RT-MPC", "ERT-MPC", "R-MPC"]
 
 fig3, ax3 = plt.subplots()
 
@@ -688,13 +688,13 @@ time_track = [physics_timestep*i for i in range(traj_length_track)]
 
 # plot state trajectories
 _, (ax1,ax2) = plt.subplots(nrows=2)
-ax1.plot(time_tube,x_traj_tube_sample[0,:],'-.', color = 'C0', label='Remote Tube MPC', linewidth=2)
+ax1.plot(time_tube,x_traj_tube_sample[0,:],'-.', color = 'C0', label=legend_label[0], linewidth=2)
 
-ax1.plot(time_Exttube,x_traj_Exttube_sample[0,:],'--', color = 'C2', label='Extended Remote Tube MPC', linewidth=2)
+ax1.plot(time_Exttube,x_traj_Exttube_sample[0,:],'--', color = 'C2', label=legend_label[1], linewidth=2)
 if traj_length_Exttube<T+1:
     ax1.plot(time_Exttube[-1],x_traj_Exttube_sample[0,traj_length_track-1], '*', color = 'C2')
 
-ax1.plot(time_track,x_traj_track_sample[0,:],':', color = 'C1', label='Remote MPC', linewidth=2)
+ax1.plot(time_track,x_traj_track_sample[0,:],':', color = 'C1', label=legend_label[2], linewidth=2)
 if traj_length_track<T+1:
     ax1.plot(time_track[-1],x_traj_track_sample[0,traj_length_track-1], '*', color = 'C1')
 
