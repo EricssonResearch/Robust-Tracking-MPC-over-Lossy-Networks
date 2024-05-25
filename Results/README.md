@@ -5,9 +5,7 @@ In this folder, we find the files that reproduce the figures of the paper _Remot
 The folder consist of four scripts and a module `Cartpole`, which implements the cartpole simulator in PyBullet. 
 We compare the [Remote MPC of Pezzutto et al.](https://ieeexplore.ieee.org/document/9452064) with our Remote Tube MPC and the extended Remote Tube MPC in our paper and in the plots and animations the scripts in this folder creates.
 
-> :exclamation: In our submitted paper, we used a different set for $\mathbb{W}$, which turned out do be calculated in an incorrect manner. We have updated the scripts here to accomodate for the correct set. However, the correctly computed set $\mathbb{W}$ did not change the outcome of the results significantly.
-
-Below you can see the architecture of our proposed remote tube MPC algorithm (Figure 2 in our paper)
+Below you can see the architecture of our proposed remote tube MPC algorithm (Figure 2 in our paper):
 
 <img src="../figures/Architecture.png" alt="Architecture of our approach" width="450"> 
 
@@ -25,7 +23,7 @@ Below you can see the reproduction of Figures 3b and 3c, where we have also adde
 
 <img src="../figures/TrackingErrorNonlinearECC24.png" alt="Average tracking error of different MPC algorithms (Figure 3b in our paper)" width="300"> <img src="../figures/TrajectoriesNonlinearECC24.png" alt="One example trajectory for a packet loss of 40%" width="300">
 
-The script [ECC24_Estimate_W_for_Cartpole.py](./ECC24_Estimate_W_for_Cartpole.py) estimates the disturbance set $\mathbb{W}$ as described in Section V.A of our paper. 
+The script [estimate_W_for_Cartpole.py](./ECC24_Estimate_W_for_Cartpole.py) estimates the disturbance set $\mathbb{W}$ as described in Section V.A of our paper. 
 
 Finally, the script [ECC24_create_animations.py](./ECC24_create_animations.py) creates animations of the inverted pendulum when it is controlled over a lossy network with the [Remote MPC of Pezzutto et al.](https://ieeexplore.ieee.org/document/9452064) and with our two proposed Remote Tube MPC approaches.
 Below we show the animation of trajectories of the Remote MPC (left), our Remote Tube MPC (middle), and the extended Remote Tube MPC (right) when there are 40% of packet drops in the network.
