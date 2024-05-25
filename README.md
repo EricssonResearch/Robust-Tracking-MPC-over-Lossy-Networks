@@ -1,7 +1,7 @@
 # Remote Tube-based MPC for Tracking Over Lossy Networks
 
 ## About this repository
-This repository contains the code related to the paper _Remote Tube-based MPC for Tracking Over Lossy Networks_, which has been submitted to the 2024 European Control Conference.
+This repository contains the code related to the paper _Remote Tube-based MPC for Tracking Over Lossy Networks_, which is currently under review.
 This paper addresses the problem of controlling constrained systems subject to disturbances in the case where controller and system are connected over a lossy network.
 To do so, we propose a novel framework that splits the concept of tube-based model predictive control in two parts.
 One runs locally on the system and is responsible for disturbance rejection, while the other runs remotely and provides optimal input trajectories that satisfy the system’s state and input constraints. Key to our approach is the presence of a nominal model and an ancillary controller on the local system.
@@ -28,7 +28,7 @@ pip3 install --upgrade pip
 pip3 install .
 ```
 to install the `LinearMPCOverNetworks` package.
-Finally, if one wants to reproduce the results in our submitted paper in [ECC Results](./ECC%20Results/), one needs to run 
+Finally, if one wants to reproduce the results in our submitted paper in [Results](./Results/), one needs to run 
 ```bash
 pip3 install PyBullet
 ```
@@ -48,9 +48,9 @@ The MPC algorithms included are:
 
 Examples on how these algorithms can be used are provided in the folder [Examples of Model Predictive Controllers](./Examples%20of%20Model%20Predictive%20Controllers/).
 
-### ECC 2024 Results
+### Results
 
-The folder [ECC Results](./ECC%20Results/) contains scripts to reproduce the results of the paper _Remote Tube-based MPC for Tracking Over Lossy Networks_ and also a script to generate animations of the cartpole.
+The folder [Results](./Results/) contains scripts to reproduce the results of the paper _Remote Tube-based MPC for Tracking Over Lossy Networks_ and also a script to generate animations of the cartpole.
 
 ### Operations on convex polytopes
 
