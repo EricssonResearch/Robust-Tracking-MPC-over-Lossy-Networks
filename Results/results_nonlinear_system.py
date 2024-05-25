@@ -1,6 +1,7 @@
 # %%
 '''
-Script to reproduce the results for the control of the cartpole system in Section V of our ECC submission
+Script to reproduce the results for the control of the cartpole system in Section V of our submitted paper 
+without the extended MPC algorithm.
 '''
 
 import numpy as np
@@ -78,6 +79,8 @@ R = 0.1*np.eye(nu)
 
 # disturbance polytope
 Hw=np.r_[np.eye(nx),-np.eye(nx)]
+
+# parameters for disturbance set from estimate_W_for_Cartpole.py
 w_pos_max = 0.0001
 w_pos_min = 0.0001
 w_vel_max = 0.0027
