@@ -1,5 +1,5 @@
 '''
-Script to reproduce the results for the control of the linearized cartpole system in Section V of our ECC submission.
+Script to reproduce the results for the control of the linearized cartpole system in Section V of our submitted paper. 
 '''
 # %%
 import numpy as np
@@ -51,9 +51,10 @@ Bc = np.array(
 nx = Ac.shape[1]
 nu= Bc.shape[1]
 
-# output matrix
+# Output matrix
 Cc = np.array([[1, 0, 0, 0], [0, 0, 1, 0]])
 
+# obtain discretized system matrices
 sys = ct.ss(Ac,Bc,Cc,0)
 d_sys = ct.c2d(sys, Th)
 A, B = d_sys.A, d_sys.B
@@ -70,7 +71,7 @@ R = 0.1*np.eye(nu)
 # disturbance polytope
 Hw=np.r_[np.eye(nx),-np.eye(nx)]
 
-# parameters for disturbance set from ECC24_Estimate_W_for_Cartpole.py
+# parameters for disturbance set from estimate_W_for_Cartpole.py
 w_pos_max = 0.0001
 w_pos_min = 0.0001
 w_vel_max = 0.0027
@@ -107,7 +108,7 @@ Hu=np.array([[1], [-1]])
 hu=10*np.ones((2*nu,1))
 U = pc.Polytope(Hu,hu)
 
-## TUBE MPC ###
+### TUBE MPC###
 # initialize robust tube-based tracking MPC object
 TubeMPC=TubeTrackMPC.TubeTrackingMPC(A,B,Q,R,N)
 # set the input constraints
@@ -125,7 +126,26 @@ K_steady_state_tube = TubeMPC.get_steady_state_controller_gain()
 # obtain plant controller
 K_plant_tube = TubeMPC.get_ancillary_controller_gain()
 
-## TRACK MPC ###
+### EXTENDED TUBE MPC ###
+# initialize extended robust tube-based tracking MPC object
+ExtTubeMPC=TubeTrackMPC.ExtendedTubeTrackingMPC(A,B,Q,R,N)
+# set the input constraints
+ExtTubeMPC.set_input_constraints(U)
+# set the state constraints
+ExtTubeMPC.set_state_constraints(X)
+# setup the MPC optimization problem
+ExtTubeMPC.setup_optimization(W, fixed_initial_state = True, rpi_method = 1)
+
+# get minimum robust positively invariant set, which represents the tube around the nominal state
+Z_Exttube = ExtTubeMPC._Z
+
+# obtain steady state controller
+K_steady_state_Exttube = ExtTubeMPC.get_steady_state_controller_gain()
+# obtain plant controller
+K_plant_Exttube = ExtTubeMPC.get_ancillary_controller_gain()
+
+
+### TRACK MPC ###
 # initialize non-robust tracking MPC object
 TrackMPC=TrackMPC.TrackingMPC(A,B,Q,R,N)
 # set the input constraints
@@ -148,16 +168,17 @@ prob_packet_loss = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 
 # initialize dictionaries to save trajectories for each packet loss probability
 trajectory_dict_tube = {}
+trajectory_dict_Exttube = {}
 trajectory_dict_track = {}
 
 # initialize matrices to save tracking errors
 tracking_error_tube = np.zeros((len(prob_packet_loss),N_MC))
+tracking_error_Exttube = np.zeros((len(prob_packet_loss),N_MC))
 tracking_error_track = np.zeros((len(prob_packet_loss),N_MC))
 
 # set initial value of the plant
 x0 = np.array([[0],[0],[0],[0]])
 
-# initialize array that counts infeasibilities of the tracking MPC approach
 is_track_infeasible = np.zeros((len(prob_packet_loss),1))
 
 for i in range(len(prob_packet_loss)):
@@ -167,28 +188,45 @@ for i in range(len(prob_packet_loss)):
     for l_mc in range(N_MC):
         if l_mc % 10 == 0:
             print(f"At Monte Carlo Simulation {l_mc}")
-        
-        ### TUBE MPC ###
-        # initialize tube MPC variables
-        
-        #initialize trajectory of state for tube MPC
+
+        ### Tube MPC ###
+        # initialize trajectory of state for tube MPC
         x_traj_tube = x0[:]
 
         # initialize plant state
         x_tube=x0[:]
-
+        
         # initialize nominal trajectory for the tube MPC
         x_nom_traj_tube=x0[:]
 
-        # intitialize estimator for tube MPC
+        # intitialize estimator for tube tracking MPC
         estim_tube = Estimator.Estimator(A, B, K_steady_state_tube, x0[:], N)
-        # initialize smart actuator for tube MPC
+
+        # initialize smart actuator for tube tracking MPC
         smart_act_tube = SmartActuator.ConsistentActuator(A, B, K_steady_state_tube, K_plant_tube, x0[:])
 
         # initialize state estimate for tube MPC
         x_hat_tube = estim_tube.get_estimate()
 
-        ### TRACK MPC ###
+        ### Extended Tube MPC ###
+        #initialize trajectory of state, input, and estimate for extended tube MPC
+        x_traj_Exttube = x0[:]
+
+        # initialize plant state
+        x_Exttube=x0[:]
+        
+        # initialize nominal trajectory for the tube MPC
+        x_nom_traj_Exttube=x0[:]
+
+        # intitialize estimator for tube tracking MPC
+        estim_Exttube = Estimator.RobustEstimator(A, B, K_steady_state_Exttube, K_plant_Exttube, x0[:], N)
+        # initialize smart actuator for tube tracking MPC
+        smart_act_Exttube = SmartActuator.ConsistentActuator(A, B, K_steady_state_Exttube, K_plant_Exttube, x0[:], is_extended_MPC_used = True)
+
+        # initialize state estimate for tube MPC
+        x_hat_Exttube = estim_Exttube.get_estimate()
+
+        ### Track MPC ###
         # initialize trajectory of state, input, and estimate for tracking MPC
         x_traj_track = x0[:]
 
@@ -205,24 +243,11 @@ for i in range(len(prob_packet_loss)):
 
         track_feasible = True
         for t in range(T):
-            # determine if signals are sent over the network in the current time step
+            # assume that the first package transmission is successful
             if (t==0):
-                # assume that the first transmission of packets is successful
                 gamma_t=1
                 theta_t=1
-
-            else:
-                # determine if a packet transmission was successful based on drawing a uniform random variable
-                if (rng_theta.uniform()<prob_packet_loss[i]):
-                    theta_t=0
-                else:
-                    theta_t=1
-
-                if (rng_gamma.uniform()<prob_packet_loss[i]):
-                    gamma_t=0
-                else:
-                    gamma_t=1
-
+            
             # uniformly draw a disturbance from the disturbance set
             w = np.r_[rng_w.uniform(-w_pos_min,w_pos_max),
                     rng_w.uniform(-w_vel_min,w_vel_max),
@@ -230,14 +255,54 @@ for i in range(len(prob_packet_loss)):
                     rng_w.uniform(-w_ang_vel_min,w_ang_vel_max)]
             w.shape = (nx,1)
 
-            ##### TUBE MPC #####
+            ##### Calculate controller packet and store it in estimator #####
 
+            ### TUBE MPC ###
+            
             # obtain qt at time t
             qt_tube = estim_tube.get_qt()
             # determine new controller packet to be sent to plant
             controller_packet_tube = TubeMPC.determine_packet(x_hat_tube, np.hstack((ref[0,t],0,0,0)), qt_tube)
             # store controller signals in controller packet to list of packets in estimator
             estim_tube.store_sent_control_sequence(controller_packet_tube['U_t'])
+
+            ### EXTENDED TUBE MPC ###
+
+            # obtain qt at time t
+            qt_Exttube = estim_Exttube.get_qt()
+            # determine new controller packet to be sent to plant
+            controller_packet_Exttube, x_nom_0_Exttube = ExtTubeMPC.determine_packet(x_hat_Exttube, np.hstack((ref[0,t],0,0,0)), qt_Exttube, gamma_t)
+            # store controller signals in controller packet to list of packets in estimator
+            estim_Exttube.store_sent_control_sequence(controller_packet_Exttube['U_t'])
+            estim_Exttube.store_current_optimal_inital_nominal_plant_states(x_nom_0_Exttube)
+
+            ### TRACKING MPC ###
+            
+            if track_feasible:
+                # obtain qt at time t
+                qt_track = estim_track.get_qt()
+                
+                # determine new controller packet to be sent to plant
+                controller_packet_track = TrackMPC.determine_packet(x_hat_track, np.hstack((ref[0,t],0,0,0)), qt_track)
+                if controller_packet_track['U_t'] is None:
+                        is_track_infeasible[i,:] += 1
+                        track_feasible = False
+                else:
+                    # store controller signals in controller packet to list of packets in estimator
+                    estim_track.store_sent_control_sequence(controller_packet_track['U_t'])
+
+            ##### process controller packet in smart actuator and apply control input to plant #####
+
+            # determine if controller packet is sent over the network in the current time step if it is not the first time step
+            if t>0:
+                # determine if a packet transmission is successful based on drawing a uniform random variable
+                if (rng_theta.uniform()<prob_packet_loss[i]):
+                    theta_t=0
+                else:
+                    theta_t=1
+
+            ### TUBE MPC ###
+
             # process controller packet on plant side to determine u_t and the return packet
             u_t_tube, plant_packet_tube = smart_act_tube.process_packet(controller_packet_tube, x_tube, theta_t)
             x_nom_traj_tube = np.hstack((x_nom_traj_tube, smart_act_tube.get_x_nom()))
@@ -248,45 +313,71 @@ for i in range(len(prob_packet_loss)):
             # add plant state to trajectory vector
             x_traj_tube = np.hstack((x_traj_tube,x_tube))
 
-            # update estimator state
-            estim_tube.update_estimate(plant_packet_tube,gamma_t)
-            x_hat_tube = estim_tube.get_estimate()
-            
             # check if the plant state is in a tube around the nominal state 
             if not (x_traj_tube[:,t]-x_nom_traj_tube[:,t] in Z_tube):
                 print(f"At k = {t} in for probability loss p_{i}={prob_packet_loss[i]} the real trajectory is not in a tube around the nominal one") 
-
-            ##### TRACK MPC #####
-            if track_feasible:
-                # obtain qt at time t
-                qt_track = estim_track.get_qt()
-                
-                # determine new controller packet to be sent to plant
-                controller_packet_track = TrackMPC.determine_packet(x_hat_track, np.hstack((ref[0,t],0,0,0)), qt_track)
-                if controller_packet_track['U_t'] is None:
-                        is_track_infeasible[i,:] += 1
-                        track_feasible = False
-                        theta_t = 0
-                else:
-                    # store controller signals in controller packet to list of packets in estimator
-                    estim_track.store_sent_control_sequence(controller_packet_track['U_t'])
-
-                    # process controller packet on plant side to determine u_t and the return packet
-                    u_t_track, plant_packet_track = smart_act_track.process_packet(controller_packet_track, x_track, theta_t)
-                    
-                    # update plant state of the plant controlled by the tracking MPC
-                    x_track =  A @ x_track + B @ u_t_track + w
-
-                    # add plant state to trajectory vector
-                    x_traj_track = np.hstack((x_traj_track, x_track))
-
-                    # update estimator state
-                    estim_track.update_estimate(plant_packet_track,gamma_t)
-                    x_hat_track = estim_track.get_estimate()
             
+            ### EXTENDED MPC ###
+
+            # process controller packet on plant side to determine u_t and the return packet
+            u_t_Exttube, plant_packet_Exttube = smart_act_Exttube.process_packet(controller_packet_Exttube, x_Exttube, theta_t)
+            x_nom_traj_Exttube = np.hstack((x_nom_traj_Exttube, smart_act_Exttube.get_x_nom()))
+
+            # update plant state of plant controller by the 
+            x_Exttube =  A @ x_Exttube + B @ u_t_Exttube + w
+
+            # add plant state to trajectory vector
+            x_traj_Exttube = np.hstack((x_traj_Exttube,x_Exttube))
+            
+            # check if the plant state is in a tube around the nominal state 
+            if not (x_traj_Exttube[:,t]-x_nom_traj_Exttube[:,t] in Z_Exttube):
+                print(f"At k = {t} in for probability loss p_{i}={prob_packet_loss[i]} the real trajectory is not in a tube around the nominal one for the extended MPC") 
+
+            ### TRACKING MPC ###
+
+            if track_feasible:
+                # process controller packet on plant side to determine u_t and the return packet
+                u_t_track, plant_packet_track = smart_act_track.process_packet(controller_packet_track, x_track, theta_t)
+                    
+                # update plant state of the plant controlled by the tracking MPC
+                x_track =  A @ x_track + B @ u_t_track + w
+
+                # add plant state to trajectory vector
+                x_traj_track = np.hstack((x_traj_track, x_track))
+
+
+            ##### send plant packet to controller #####
+
+            # determine if plant packet is sent over the network in the current time step if it is not the first time step
+            if (t>0):
+                # determine if a packet transmission is successful based on drawing a uniform random variable
+                if (rng_gamma.uniform()<prob_packet_loss[i]):
+                    gamma_t=0
+                else:
+                    gamma_t=1
+
+            ### TUBE MPC ### 
+
+            # update estimator state
+            estim_tube.update_estimate(plant_packet_tube,gamma_t)
+            x_hat_tube = estim_tube.get_estimate()
+
+            ### EXTENDED TUBE MPC ###            
+
+            # update estimator state
+            estim_Exttube.update_estimate(plant_packet_Exttube,gamma_t)
+            x_hat_Exttube = estim_Exttube.get_estimate()
+
+            ### TRACKING MPC ###
+
+            if track_feasible:
+                # update estimator state
+                estim_track.update_estimate(plant_packet_track,gamma_t)
+                x_hat_track = estim_track.get_estimate()         
         
         # save the tracking errors
         tracking_error_tube[i,l_mc] = 1/T*np.sqrt(np.sum((x_traj_tube[0,0:-1]-ref)**2+(x_traj_tube[1,0:-1])**2+(x_traj_tube[2,0:-1])**2+(x_traj_tube[3,0:-1])**2))
+        tracking_error_Exttube[i,l_mc] = 1/T*np.sqrt(np.sum((x_traj_Exttube[0,0:-1]-ref)**2+(x_traj_Exttube[1,0:-1])**2+(x_traj_Exttube[2,0:-1])**2+(x_traj_Exttube[3,0:-1])**2))
         
         if track_feasible:
             tracking_error_track[i,l_mc] = 1/T*np.sqrt(np.sum((x_traj_track[0,0:-1]-ref)**2+(x_traj_track[1,0:-1])**2+(x_traj_track[2,0:-1])**2+(x_traj_track[3,0:-1])**2))
@@ -296,6 +387,7 @@ for i in range(len(prob_packet_loss)):
         if l_mc==np.min([5,N_MC-1]):
             # save the trajectories of the fifth simulation or the last simulation if there are less than five simulation.
             trajectory_dict_tube[prob_packet_loss[i]] = x_traj_tube
+            trajectory_dict_Exttube[prob_packet_loss[i]] = x_traj_Exttube
             trajectory_dict_track[prob_packet_loss[i]] = x_traj_track
 
 # %%
@@ -315,20 +407,34 @@ print(f"Mean: {np.mean(comp_times_scaled)}")
 fig, ax = plt.subplots()
 # define bins for the histogram
 bins = np.linspace(2.5,20,50)
-ax.hist(np.clip(comp_times_scaled, bins[0], bins[-1]), bins=bins)
+ax.hist(np.clip(comp_times_scaled, bins[0], bins[-1]), bins=bins, alpha = 0.7, label  = 'RT-MPC')
 ax.set_xlabel('Execution time [ms]', fontsize='large')
 ax.set_ylabel('Count', fontsize='large')
 
+# Plot execution times of the extended MPC
+print("Extended MPC Execution Time")
+comp_times = ExtTubeMPC.get_computational_times()
+
+bins = np.linspace(2.5,20,50)
+comp_times_scaled = [1000*i for i in comp_times]
+print(f"Max: {np.max(comp_times_scaled)}")
+print(f"95% Quantile: {np.quantile(comp_times_scaled,0.95)}")
+print(f"90% Quantile: {np.quantile(comp_times_scaled,0.9)}")
+print(f"75% Quantile: {np.quantile(comp_times_scaled,0.75)}")
+print(f"Median: {np.median(comp_times_scaled)}")
+print(f"Mean: {np.mean(comp_times_scaled)}")
+ax.hist(np.clip(comp_times_scaled, bins[0], bins[-1]), bins=bins, alpha = 0.7, color='C2', label = 'ERT-MPC')
+ax.set_xlabel('Execution time [ms]', fontsize='large')
+ax.set_ylabel('Count', fontsize='large')
+ax.legend()
+
 # Print number of failed executions for each packet loss probability
-print("Failed executions of Remote MPC:")
+print("Failed executions for tracking MPC:")
 print(is_track_infeasible)
 # %% 
 # Plot results
-# define legends
-legend_in = []
-legend_label = ["Remote Tube MPC", "Remote MPC"]
 
-# Filter the tracking errors of the remote MPC to remove the results of the simulations, which resulted in infeasible problems
+# Filter the tracking errors to remove the results of the simulations, which resulted in infeasible problems
 tracking_error_track_filtered = []
 for i in range(len(is_track_infeasible)):
     if is_track_infeasible[i,0]<N_MC:
@@ -336,18 +442,29 @@ for i in range(len(is_track_infeasible)):
     else:
         tracking_error_track_filtered.append(np.nan)
 
-# Plot results for the tracking error as box plots over different packet loss probabilities
+# Plot results for the tracking error as a box plot
+
+# define legends
+legend_in = []
+legend_label = ["RT-MPC", "ERT-MPC", "R-MPC"]
+
 fig3, ax3 = plt.subplots()
 
-bp3=ax3.boxplot(tracking_error_tube.T,positions=np.array(range(len(tracking_error_tube)))*2-0.35, widths=0.6, patch_artist=True, sym = 'x', boxprops=dict(facecolor="C0"))
+bp3=ax3.boxplot(tracking_error_tube.T, positions=np.array(range(len(tracking_error_tube)))*2-0.6, widths=0.4, patch_artist=True, sym = 'x', boxprops=dict(facecolor="C0"))
 legend_in.append(bp3["boxes"][0])
 for median in bp3['medians']:
     median.set_color('black')
 
-bp4=ax3.boxplot(tracking_error_track_filtered,positions=np.array(range(len(tracking_error_track_filtered)))*2+0.35, widths=0.6, patch_artist=True, sym = 'x', boxprops=dict(facecolor="C1"))
+bp3=ax3.boxplot(tracking_error_Exttube.T, positions=np.array(range(len(tracking_error_Exttube)))*2, widths=0.4, patch_artist=True, sym = 'x', boxprops=dict(facecolor="C2"))
+legend_in.append(bp3["boxes"][0])
+for median in bp3['medians']:
+    median.set_color('black')
+
+bp4=ax3.boxplot(tracking_error_track_filtered,positions=np.array(range(len(tracking_error_track_filtered)))*2+0.6, widths=0.4, patch_artist=True, sym = 'x', boxprops=dict(facecolor="C1"))
 legend_in.append(bp4["boxes"][0])
 for median in bp4['medians']:
     median.set_color('black')
+
 
 ax3.set_xticks(range(0, 2*(len(prob_packet_loss)), 2))
 ax3.set_xticklabels(prob_packet_loss)
@@ -355,21 +472,22 @@ ax3.set_xlabel("Packet Loss Probability", fontsize='large')
 ax3.set_ylabel("Average Tracking Error", fontsize='large')
 ax3.legend(legend_in, legend_label, loc='best', fontsize='large')
 
-# %% 
-# plot the trajectories of position and angle
+# %% plot the tracking tracking errors
 p = 0.4
 x_traj_tube_sample = trajectory_dict_tube[p]
+x_traj_Exttube_sample = trajectory_dict_Exttube[p]
 x_traj_track_sample = trajectory_dict_track[p]
+# get length of Remote MPC trajectory, since it could be shorter due to infeasibilities
 traj_length_track = x_traj_track_sample.shape[1]
 # plot state trajectories
 _, (ax1,ax2) = plt.subplots(nrows=2)
 time_tube = [Th*i for i in range(T+1)]
 time_track = [Th*i for i in range(traj_length_track)]
-ax1.plot(time_tube,x_traj_tube_sample[0,:],'-.', color = 'C0', label='Remote Tube MPC', linewidth=2)
-ax1.plot(time_track,x_traj_track_sample[0,:],'--', color = 'C0', label='Remote MPC', linewidth=2)
+ax1.plot(time_tube,x_traj_tube_sample[0,:],'-.', color = 'C0', label=legend_label[0], linewidth=2)
+ax1.plot(time_tube,x_traj_Exttube_sample[0,:],'-.', color = 'C2', label=legend_label[1], linewidth=2)
+ax1.plot(time_track,x_traj_track_sample[0,:],'--', color = 'C1', label=legend_label[2], linewidth=2)
 if traj_length_track<T+1:
-    ax1.plot(time_track[-1],x_traj_track_sample[0,traj_length_track-1], '*')
-# Plot reference
+    ax1.plot(time_track[-1],x_traj_track_sample[0,traj_length_track-1], '*', color = 'C1')
 ax1.plot(time_tube[0:-1],ref.T, color = 'k', label='r(k)')
 ax1.set_ylabel("Position $p$ [m]", fontsize='large')
 ax1.legend()
@@ -377,9 +495,10 @@ ax1.set_xticks([0, 1, 2, 3, 4, 5])
 ax1.grid()
 
 ax2.plot(time_tube,x_traj_tube_sample[2,:],'-.', color = 'C0', linewidth=2)
-ax2.plot(time_track,x_traj_track_sample[2,:],'--', color = 'C0', linewidth=2)
+ax2.plot(time_tube,x_traj_Exttube_sample[2,:],'-.', color = 'C2', linewidth=2)
+ax2.plot(time_track,x_traj_track_sample[2,:],'--', color = 'C1', linewidth=2)
 if traj_length_track<T+1:
-    ax2.plot(time_track[-1],x_traj_track_sample[2,traj_length_track-1], '*')
+    ax2.plot(time_track[-1],x_traj_track_sample[2,traj_length_track-1], '*', color = 'C1')
 # Plot reference
 ax2.plot([0,time_tube[-1]],[0,0], color = 'k', label='Reference')
 # Plot bounds for angle

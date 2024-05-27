@@ -1,6 +1,7 @@
 # %%
 '''
-Script to reproduce the results for the control of the cartpole system in Section V of our ECC submission
+Script to reproduce the results for the control of the cartpole system in Section V of our submitted paper 
+without the extended MPC algorithm.
 '''
 
 import numpy as np
@@ -78,6 +79,8 @@ R = 0.1*np.eye(nu)
 
 # disturbance polytope
 Hw=np.r_[np.eye(nx),-np.eye(nx)]
+
+# parameters for disturbance set from estimate_W_for_Cartpole.py
 w_pos_max = 0.0001
 w_pos_min = 0.0001
 w_vel_max = 0.0027
@@ -418,7 +421,7 @@ for i in range(len(is_track_infeasible)):
 
 # Plot results for the tracking error as box plots over different packet loss probabilities
 legend_in = []
-legend_label = ["Remote Tube MPC", "Remote MPC"]
+legend_label = ["RT-MPC", "R-MPC"]
 fig3, ax3 = plt.subplots()
 
 bp3=ax3.boxplot(tracking_error_tube_discrete.T, positions=np.array(range(len(tracking_error_tube_discrete)))*2-0.35, widths=0.6, patch_artist=True, sym = 'x', boxprops=dict(facecolor="C0"))
@@ -451,8 +454,8 @@ time_track = [physics_timestep*i for i in range(traj_length_track)]
 
 # plot state trajectories
 _, (ax1,ax2) = plt.subplots(nrows=2)
-ax1.plot(time_tube,x_traj_tube_sample[0,:],'-.', color = 'C0', label='Remote Tube MPC', linewidth=2)
-ax1.plot(time_track,x_traj_track_sample[0,:],':', color = 'C0', label='Remote MPC', linewidth=2)
+ax1.plot(time_tube,x_traj_tube_sample[0,:],'-.', color = 'C0', label=legend_label[0], linewidth=2)
+ax1.plot(time_track,x_traj_track_sample[0,:],':', color = 'C0', label=legend_label[1], linewidth=2)
 if traj_length_track<T+1:
     ax1.plot(time_track[-1],x_traj_track_sample[0,traj_length_track-1], '*')
 # Plot reference
