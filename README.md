@@ -41,7 +41,7 @@ pip3 install PyBullet
 The [src/LinearMPCOverNetwoks](./src/LinearMPCOverNetworks/) folder contains several different MPC implementations for linear system with additive disturbances under constraints that lie in convex polytopes including the origin. The algorithms either bring the plant to the origin or track a piece-wise constant reference.
 The MPC algorithms included are:
 
-- [D. Umsonst, F. Barbosa, "Remote Tube-based MPC for Tracking Over Lossy Networks" accepted at the Conference on Decision and Control](https://arxiv.org/abs/2408.07553)
+- [D. Umsonst, F. Barbosa, "Remote Tube-based MPC for Tracking Over Lossy Networks" accepted at the 2024 Conference on Decision and Control](https://arxiv.org/abs/2408.07553)
 - [D. Limon, I. Alvarado, T. Alamo, E.F. Camacho, "MPC for tracking piecewise constant references for constrained linear systems," 2008](https://www.sciencedirect.com/science/article/abs/pii/S0005109808001106)
 - [M. Pezzutto, M. Farina, R. Carli and L. Schenato, "Remote MPC for Tracking Over Lossy Networks," 2022](https://ieeexplore.ieee.org/abstract/document/9452064)
 - [D.Q. Mayne, M.M. Seron, S.V. Raković, "Robust model predictive control of constrained linear systems with bounded disturbances," 2005](https://www.sciencedirect.com/science/article/abs/pii/S0005109804002870)
