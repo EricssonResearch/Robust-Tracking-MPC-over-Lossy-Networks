@@ -112,7 +112,7 @@ def mink_sum(poly1: pc.Polytope, poly2: Union[pc.Polytope, np.ndarray]):
         
     return poly_out
 
-def scale(poly: pc.Polytope, scaling_variable):
+def scale(poly: pc.Polytope, scaling_variable: Union[float, np.ndarray]):
     '''
     Function that implements the scaling of a polytope with the scaling variable, which can be a matrix or scalar
     '''
@@ -177,7 +177,7 @@ def determine_convex_hull(vertices: np.ndarray):
     
     return poly_out
 
-def calculate_minimal_robust_positively_invariant_set(A, W: pc.Polytope, eps_var: float = 1.9*10**(-5), s_max: int = 20):
+def calculate_minimal_robust_positively_invariant_set(A: np.ndarray, W: pc.Polytope, eps_var: float = 1.9*10**(-5), s_max: int = 20):
     '''
     Function to calculate the minimal robust positively invariant set of a linear system x(k+1)=Ax(k)+w,
     where w \in W and W is a polytope that contains the origin.
@@ -244,7 +244,7 @@ def calculate_minimal_robust_positively_invariant_set(A, W: pc.Polytope, eps_var
             
     return scale(Fs,1/(1-alpha_s_max)), status
 
-def calculate_maximum_admissible_output_set(A :np.ndarray, X: pc.Polytope):
+def calculate_maximum_admissible_output_set(A: np.ndarray, X: pc.Polytope):
     """  
     This function determines the maximum admissible output set of the discrete time system 
             x(k+1)=Ax(k), where x(k)\in X for all k>=0

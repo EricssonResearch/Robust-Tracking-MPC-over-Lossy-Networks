@@ -6,7 +6,7 @@ NOTE: In [1], it is assumed that the constraints for the inputs and states are i
 separate constraints on the states and inputs, i.e., x \in X and u \in U
 
 [1] D. Limon, I. Alvarado, T. Alamo, E.F. Camacho, Robust tube-based MPC for tracking of constrained linear systems with additive disturbances, Journal of Process Control, Volume 20, Issue 3, 2010
-[2] D. Umsonst, F. Barbosa, "Remote Tube-based MPC for Tracking Over Lossy Networks", under review
+[2] D. Umsonst and F. S. Barbosa, "Remote Tube-based MPC for Tracking Over Lossy Networks," 2024 IEEE 63rd Conference on Decision and Control (CDC), Milan, Italy, 2024, pp. 1041-1048, doi: 10.1109/CDC56724.2024.10885830.
 [3] M. Pezzutto, M. Farina, R. Carli and L. Schenato, "Remote MPC for Tracking Over Lossy Networks," in IEEE Control Systems Letters, vol. 6, pp. 1040-1045, 2022, doi: 10.1109/LCSYS.2021.3088749.
 '''
 
@@ -19,7 +19,7 @@ import time
 
 class TubeTrackingMPC(TubeRegulatorMPC):
 
-    def __init__(self, A: np.ndarray, B: np.ndarray, Q: np.ndarray, R: np.ndarray, N: int, lambda_param= 0.99999):
+    def __init__(self, A: np.ndarray, B: np.ndarray, Q: np.ndarray, R: np.ndarray, N: int, lambda_param: float = 0.99999):
         super().__init__(A,B,Q,R,N)
         self._lambda = lambda_param
 
@@ -51,8 +51,8 @@ class TubeTrackingMPC(TubeRegulatorMPC):
 
         hcl = np.r_[hx,
                     hu,
-                    1/self._lambda*hx,
-                    1/self._lambda*hu] 
+                    self._lambda*hx,
+                    self._lambda*hu] 
 
         XXbarUbar=pc.Polytope(Hcl,hcl)   
         # calculate the terminal set as the maximum admissible output set
@@ -60,7 +60,7 @@ class TubeTrackingMPC(TubeRegulatorMPC):
    
         self._Xf =  Xf
 
-    def determine_mRPI(self, W: pc.Polytope, epsilon = 1*10**(-4), Acl = None, rpi_method = 0):
+    def determine_mRPI(self, W: pc.Polytope, epsilon: float = 1*10**(-4), Acl: np.ndarray = None, rpi_method: int = 0):
         '''
         This function calculates the minimum robust positively invariant (mRPI) for a given disturbance polytope W,
         a precision epsilon, a desired closed-loop system matrix Acl and a chosen method rpi_method.
@@ -101,7 +101,7 @@ class TubeTrackingMPC(TubeRegulatorMPC):
             self._Uc = up.pont_diff(self._U,up.scale(self._Z,-self._K_ancillary))
         self._Xc = up.pont_diff(self._X, self._Z)
         
-    def generate_optimization_problem(self, fixed_initial_state = False):
+    def generate_optimization_problem(self, fixed_initial_state: bool = False):
         '''
         This function generates a parametrized version of the optimization problem solved in the MPC
         by doing so we can speed up the optimization, since the optimization problem does not have to be re-instantiated each time it is solved
@@ -155,7 +155,7 @@ class TubeTrackingMPC(TubeRegulatorMPC):
         # resetting shape to keep other functionalities working
         hxN.shape = (hxN.shape[0], 1)
 
-    def setup_optimization(self, W, fixed_initial_state = False, rpi_method = 0):
+    def setup_optimization(self, W: pc.Polytope, fixed_initial_state: bool = False, rpi_method: int = 0):
         # this functions sets up the MPC optimization problem by ...
         
         # ... determining the minimum robust positively invariant (mrpi) set
@@ -226,7 +226,7 @@ class TubeTrackingMPC(TubeRegulatorMPC):
 
         return packet
     
-    def set_ancillary_controller_gain(self, K_ancillary):
+    def set_ancillary_controller_gain(self, K_ancillary: np.ndarray):
         self._K_ancillary = K_ancillary
         self._Acl_plant = self._A-self._B@K_ancillary
     
@@ -250,7 +250,7 @@ class ExtendedTubeTrackingMPC(TubeTrackingMPC):
     '''
     This class implements the Extended Tube MPC approach proposed in Section IV.F of [2]
     '''
-    def generate_optimization_problem_when_packet_received(self, W):
+    def generate_optimization_problem_when_packet_received(self, W: pc.Polytope):
         '''
         This function generates a parametrized version of the optimization problem solved in the MPC when a packet has been received at the remote controller.
         by doing so we can speed up the optimization, since the optimization problem does not have to be re-instantiated each time it is solved
@@ -298,13 +298,13 @@ class ExtendedTubeTrackingMPC(TubeTrackingMPC):
         # resetting shape to keep other functionalities working
         hxN.shape = (hxN.shape[0], 1)
 
-    def setup_optimization(self, W, fixed_initial_state = False, rpi_method = 0):
+    def setup_optimization(self, W: pc.Polytope, fixed_initial_state: bool = False, rpi_method: int = 0):
         # setup optimization problem when packet has not been received
         super().setup_optimization(W, fixed_initial_state = fixed_initial_state, rpi_method = rpi_method)
         # setup optimization problem when packet has been received
         self.generate_optimization_problem_when_packet_received(W)
     
-    def solve_optimization_problem(self, x_init: np.ndarray, ref: np.ndarray, gamma_t = 0):
+    def solve_optimization_problem(self, x_init: np.ndarray, ref: np.ndarray, gamma_t: int = 0):
         '''
         This function solves the optimization problem of the MPC
         '''
@@ -348,7 +348,7 @@ class ExtendedTubeTrackingMPC(TubeTrackingMPC):
 
         return x_nom, u_nom, x_steady_state, u_steady_state
     
-    def determine_packet(self, x_hat, ref, q_t, gamma_t = 0):
+    def determine_packet(self, x_hat: np.ndarray, ref: np.ndarray, q_t: int, gamma_t: int = 0):
         '''
         This function determines the packet to be sent from the controller to the plant when the network is lossy.
         '''

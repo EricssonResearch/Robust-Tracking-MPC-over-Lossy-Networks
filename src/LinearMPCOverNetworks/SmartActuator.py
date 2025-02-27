@@ -4,7 +4,7 @@ Furthermore, we also implement a child class of the smart actuator, which implem
 together with the nominal plant model and ancillary controller described in Section IV.C in [2].
 
 [1] M. Pezzutto, M. Farina, R. Carli and L. Schenato, "Remote MPC for Tracking Over Lossy Networks," in IEEE Control Systems Letters, vol. 6, pp. 1040-1045, 2022, doi: 10.1109/LCSYS.2021.3088749.
-[2] D. Umsonst, F. Barbosa, "Remote Tube-based MPC for Tracking Over Lossy Networks", under review
+[2] D. Umsonst and F. S. Barbosa, "Remote Tube-based MPC for Tracking Over Lossy Networks," 2024 IEEE 63rd Conference on Decision and Control (CDC), Milan, Italy, 2024, pp. 1041-1048, doi: 10.1109/CDC56724.2024.10885830.
 '''
 import numpy as np
 
@@ -28,7 +28,7 @@ class SmartActuator:
         '''
         self._t += 1
 
-    def process_packet(self,packet: dict, x_t: np.ndarray, theta_t):
+    def process_packet(self, packet: dict, x_t: np.ndarray, theta_t):
         '''
         This function processes a received packet on the local plant side, which is used to determine the next control input
         '''
@@ -54,7 +54,7 @@ class SmartActuator:
         return u_t, plant_packet
 
 
-    def update_Theta_t(self,theta_t,q_t):
+    def update_Theta_t(self, theta_t: int, q_t: int):
         '''
         This function calculates the consistency metric \Theta_t for a received packet according to equation (17) in [1] 
         '''
@@ -78,7 +78,7 @@ class SmartActuator:
 
         return self._s_t
     
-    def update_local_information(self,u_mpc_traj):
+    def update_local_information(self, u_mpc_traj: np.ndarray):
         '''
         This function updates the local information stored on the smart actuator.
         '''
@@ -87,7 +87,7 @@ class SmartActuator:
         if self._Theta_t==1:
             self._u_traj=u_mpc_traj
 
-    def compute_u_t(self,x_t):
+    def compute_u_t(self, x_t: np.ndarray):
         '''
         This function computes the actual control input to the plant
         '''
@@ -112,7 +112,7 @@ class SmartActuator:
     def get_Theta_t(self):
         return self._Theta_t
         
-    def encapsulate(self, x_t):
+    def encapsulate(self, x_t: np.ndarray):
         '''
         This function encapsulates the plant state x_t at time t and s_t according to equation (4) in [1]
         '''
@@ -126,7 +126,7 @@ class ConsistentActuator(SmartActuator):
     '''
     This class is an extension of the SmartActuator class, which enables the remote robust tube-based tracking MPC over lossy networks
     '''
-    def __init__(self, A: np.ndarray, B: np.ndarray, K: np.ndarray, K_plant: np.ndarray, x0: np.ndarray, is_extended_MPC_used = False):
+    def __init__(self, A: np.ndarray, B: np.ndarray, K: np.ndarray, K_plant: np.ndarray, x0: np.ndarray, is_extended_MPC_used: bool = False):
 
         super().__init__(K)
         # initialize nominal trajectory
@@ -143,7 +143,7 @@ class ConsistentActuator(SmartActuator):
         # flag to indicate if the extended MPC described in Section IV.F of [2] is used
         self._is_extended_MPC_used = is_extended_MPC_used
 
-    def update_x_nom(self,u_nom: np.ndarray):
+    def update_x_nom(self, u_nom: np.ndarray):
         '''
         This function updates the nominal trajectory x_nom on the plant side based on the nominal control input u_nom
         according to equation (4) of [2]
@@ -171,7 +171,7 @@ class ConsistentActuator(SmartActuator):
         u_t = u_nom_t - self._K_plant @ (x_t-x_nom_t)
         return u_t
     
-    def process_packet(self,packet,x_t,theta_t):
+    def process_packet(self, packet: dict, x_t: np.ndarray, theta_t: int):
         '''
         This function processes a received packet on the local plant side, which is used to determine the next control input as described in Section IV.B+C of [2]
         NOTE: The main difference to the SmartActuator class is that here we need to apply the ancillary controller to guarantee that the constraints are satisfied and the plant state
@@ -212,7 +212,7 @@ class ConsistentActuator(SmartActuator):
 
         return u_t, plant_packet
     
-    def update_local_information(self,u_mpc_traj, x_nom_t_received = None):
+    def update_local_information(self, u_mpc_traj: np.ndarray, x_nom_t_received: np.ndarray = None):
         '''
         This function updates the local information stored on the consistent actuator, which includes the actuator input trajectory and the first state of the nominal plant
         '''
@@ -221,7 +221,7 @@ class ConsistentActuator(SmartActuator):
             if x_nom_t_received is not None:
                 self.reset_x_nom(x_nom_t_received)
 
-    def encapsulate_extended(self, x_t):
+    def encapsulate_extended(self, x_t: np.ndarray):
         '''
         This function implements the extended encapsulation needed for the extended tube MPC proposed in Section IV.F of [2] 
         '''

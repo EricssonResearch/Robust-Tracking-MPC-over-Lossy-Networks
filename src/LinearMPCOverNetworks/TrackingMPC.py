@@ -18,7 +18,7 @@ import time
 
 class TrackingMPC(RegulatorMPC.RegulatorMPC):
 
-    def __init__(self, A: np.ndarray, B: np.ndarray, Q: np.ndarray, R: np.ndarray, N: int, lambda_param= 0.99999) -> None:
+    def __init__(self, A: np.ndarray, B: np.ndarray, Q: np.ndarray, R: np.ndarray, N: int, lambda_param: float= 0.99999) -> None:
         super().__init__(A,B,Q,R,N)
 
         # Calculate stabilizing controller based on LQR with same cost matrices as for MPC
@@ -42,7 +42,7 @@ class TrackingMPC(RegulatorMPC.RegulatorMPC):
         # initialize list to save computational times of the solver of the MPC problem
         self._computational_times = []
 
-    def determine_packet(self,x_hat: np.ndarray, ref: np.ndarray, q_t):
+    def determine_packet(self,x_hat: np.ndarray, ref: np.ndarray, q_t: int):
         '''
         This function determines the packet to be sent from the controller to the plant when the network is lossy according to (3) in [2]
         '''
@@ -113,7 +113,7 @@ class TrackingMPC(RegulatorMPC.RegulatorMPC):
         # generate the optimization problem
         self._prob = cp.Problem(objective, constraints)
     
-    def solve_optimization_problem(self, x_init: np.ndarray, ref: np.ndarray, verbose_MPC=False):
+    def solve_optimization_problem(self, x_init: np.ndarray, ref: np.ndarray, verbose_MPC: bool = False):
         '''
         This function solves the MPC problem given by equation (12) in [2]
         '''
@@ -175,8 +175,8 @@ class TrackingMPC(RegulatorMPC.RegulatorMPC):
 
         hcl = np.r_[hx,
                     hu,
-                    1/self._lambda*hx,
-                    1/self._lambda*hu]
+                    self._lambda*hx,
+                    self._lambda*hu]
 
         XXbarUbar=pc.Polytope(Hcl,hcl)
         

@@ -1,7 +1,8 @@
 # %%
 '''
-Script to reproduce the results for the control of the cartpole system in Section V of our submitted paper 
-without the extended MPC algorithm.
+Script to reproduce the results for the control of the cartpole system in Section V of [1] without the extended MPC algorithm.
+
+[1]  D. Umsonst and F. S. Barbosa, "Remote Tube-based MPC for Tracking Over Lossy Networks," 2024 IEEE 63rd Conference on Decision and Control (CDC), Milan, Italy, 2024, pp. 1041-1048, doi: 10.1109/CDC56724.2024.10885830.
 '''
 
 import numpy as np

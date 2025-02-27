@@ -2,7 +2,7 @@
 This file implements a class for a state estimator as proposed in Section III.B of [1] and the robust state estimator proposed in Section IV.F of [2].
 
 [1] M. Pezzutto, M. Farina, R. Carli and L. Schenato, "Remote MPC for Tracking Over Lossy Networks," in IEEE Control Systems Letters, vol. 6, pp. 1040-1045, 2022, doi: 10.1109/LCSYS.2021.3088749.
-[2] D. Umsonst, F. Barbosa, "Remote Tube-based MPC for Tracking Over Lossy Networks", under review
+[2] D. Umsonst and F. S. Barbosa, "Remote Tube-based MPC for Tracking Over Lossy Networks," 2024 IEEE 63rd Conference on Decision and Control (CDC), Milan, Italy, 2024, pp. 1041-1048, doi: 10.1109/CDC56724.2024.10885830.
 '''
 import numpy as np
 
@@ -31,7 +31,7 @@ class Estimator:
         '''
         self._t += 1
 
-    def store_sent_control_sequence(self,Ut: np.ndarray):
+    def store_sent_control_sequence(self, Ut: np.ndarray):
         '''
         This function stores the control sequence Ut sent from the remote controller to the plant.
         The reason for that is that the estimator needs to have the sent control sequences available when updating the estimate in
@@ -45,12 +45,12 @@ class Estimator:
         This function updates the state estimate based on the packet sent by the plant to the remotec ontroller and gamma_t, where gamma_t=1 indicates the packet has been received successfully.
         The estimator dynamics are given by equations (13)-(15) in [1]
         '''
-        # extract content of packet
-        x_t=packet['x_t']
-        s_t=packet['s_t']
-
+        
         # if the packet has been received...
         if gamma_t == 1:
+            # ... extract content of packet
+            x_t=packet['x_t']
+            s_t=packet['s_t']
             # ... obtain the control sequence uses by the plant
             u_sequ=self._controlSequences[s_t]
             # ... determine the control input \hat{u}(k|k)
@@ -115,17 +115,16 @@ class RobustEstimator(Estimator):
         This function updates the state estimate based on the packet sent by the plant to the remote and gamma_t, where gamma_t=1 indicates the packet has been received successfully.
         The estimator dynamics are given by equations (13)-(15) in [1], where we used the values for \hat{x}(k|k) and \hat{u}(k|k) as proposed in [2]
         '''
-        # extract content of packet
-        x_t=packet['x_t']
-        s_t=packet['s_t']
-        x_nom_t = packet['x_nom_t']
-
-        # make sure the received states are in the right shape
-        x_t.shape = (self._K_plant.shape[1],1)
-        x_nom_t.shape = (self._K_plant.shape[1],1)
 
         # if the packet has been received...
         if gamma_t == 1:
+            # ... extract content of packet
+            x_t=packet['x_t']
+            s_t=packet['s_t']
+            x_nom_t = packet['x_nom_t']
+            # ... make sure the received states are in the right shape
+            x_t.shape = (self._K_plant.shape[1],1)
+            x_nom_t.shape = (self._K_plant.shape[1],1)
             # ... obtain the control sequence uses by the plant
             u_sequ=self._controlSequences[s_t]
             # ... determine the nominal control input

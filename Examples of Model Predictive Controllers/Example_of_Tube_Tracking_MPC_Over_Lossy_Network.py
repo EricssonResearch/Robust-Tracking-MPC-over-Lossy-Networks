@@ -3,7 +3,7 @@ This script shows how the tube tracking MPC controller of [1] can be used.
 Here, we use the same setup as in Example_of_Tracking_MPC.py but this time we add a disturbance w(k) to the plant dynamics and include a lossy network.
 These additions require us to use the Consistent Actuator and the Estimator proposed in [1].
 
-[1] D. Umsonst, F. Barbosa, "Remote Tube-based MPC for Tracking Over Lossy Networks", under review
+[1] D. Umsonst and F. S. Barbosa, "Remote Tube-based MPC for Tracking Over Lossy Networks," 2024 IEEE 63rd Conference on Decision and Control (CDC), Milan, Italy, 2024, pp. 1041-1048, doi: 10.1109/CDC56724.2024.10885830.
 '''
 
 import numpy as np

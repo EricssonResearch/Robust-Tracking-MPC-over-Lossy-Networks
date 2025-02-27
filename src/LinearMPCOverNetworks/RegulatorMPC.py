@@ -8,7 +8,7 @@ import polytope as pc
 
 class RegulatorMPC:
 
-    def __init__(self,A: np.ndarray, B: np.ndarray, Q: np.ndarray, R: np.ndarray, N: int) -> None:
+    def __init__(self, A: np.ndarray, B: np.ndarray, Q: np.ndarray, R: np.ndarray, N: int) -> None:
         # initialize system matrices
         self._A=A
         self._B=B

@@ -1,7 +1,7 @@
 # Files to reproduce the results in the submitted paper
 
 ## Overview 
-In this folder, we find the files that reproduce the figures of the paper _Remote Tube-based MPC for Tracking Over Lossy Networks_ (currently under review).
+In this folder, we find the files that reproduce the figures of the paper _Remote Tube-based MPC for Tracking Over Lossy Networks_ presented at the 2024 IEEE 63rd Conference on Decision and Control.
 The folder consist of four scripts and a module `Cartpole`, which implements the cartpole simulator in PyBullet. 
 We compare the [Remote MPC of Pezzutto et al.](https://ieeexplore.ieee.org/document/9452064) with our Remote Tube MPC and the extended Remote Tube MPC in our paper and in the plots and animations the scripts in this folder creates.
 

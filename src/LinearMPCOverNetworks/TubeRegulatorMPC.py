@@ -23,7 +23,7 @@ class TubeRegulatorMPC(RegulatorMPC):
         self._P = ct.dlyap(self._A-self._B@self._K,Q_lyap_sym)
         self._Acl = A - B@K
 
-    def determine_mRPI(self, W: pc.Polytope, eps_var = 1.9*10**(-5), Acl = None, rpi_method = 0, K = None):
+    def determine_mRPI(self, W: pc.Polytope, eps_var: float = 1.9*10**(-5), Acl: np.ndarray = None, rpi_method: int = 0, K: np.ndarray = None):
         '''
         This function calculates the minimum robust positively invariant (mRPI) for a given disturbance polytope W,
         a precision epsilon and a desired closed-loop system matrix Acl
